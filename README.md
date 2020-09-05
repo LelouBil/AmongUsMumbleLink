@@ -2,11 +2,13 @@
 
 Small program that gets the player's position and feeds it to Mumble for positional audio.
 
-##How to use
+## How to use
 
  - download mumble
  
- - configure positional audio like so ![](image.png)
+ - configure positional audio like so
+ 
+ ![mumble](https://raw.githubusercontent.com/LelouBil/AmongUsMumbleLink/master/mumble.png)
  
  - Get the latest release from [here](https://github.com/LelouBil/AmongUsMumbleLink/releases/latest)
 
@@ -23,7 +25,7 @@ Small program that gets the player's position and feeds it to Mumble for positio
  
 ## Known issues
 
-sometimes the app doesn't reset the coordinates when a game ended, just relanch it.
+Sometimes the app doesn't reset the coordinates when a game ended, just relanch it.
 
 Credits : 
 
