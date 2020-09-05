@@ -1,5 +1,9 @@
+// MumbleLink.cpp : Définit les fonctions de la bibliothèque statique.
+//
 
-#include "MumbleLinkDLL.h"
+#include "pch.h"
+
+#include "MumbleLink.h"
 #include <iostream>
 #include <stdio.h>
 #include <windows.h>
@@ -106,4 +110,5 @@ void update_mumble(const float x, const float y, const float z, const int dir, c
 	memcpy(lm->context, wc.c_str(), c_len);
 	lm->context_len = c_len;
 }
+
 

@@ -59,9 +59,6 @@
     <Compile Include="Utils.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="packages.config" />
-  </ItemGroup>
-  <ItemGroup>
     <ProjectReference Include="..\..\memory.dll\Memory\Memory.csproj">
       <Project>{9abf5742-7489-455c-b94a-3a85725d939a}</Project>
       <Name>Memory</Name>

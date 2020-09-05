@@ -3,7 +3,9 @@ using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
+using AutoUpdaterDotNET;
 using HamsterCheese.AmongUsMemory;
+using Newtonsoft.Json;
 
 internal static class Program
 {
@@ -29,18 +31,20 @@ internal static class Program
 
     private static float _z;
 
-    private static string _name;
+    private static string _name = "user";
 
-    private static string _context;
+    private static string _context = "dead";
 
     private static int _direction;
 
     private static PlayerData _localPlayer;
+    private static bool _saidWait;
 
     private const int UpdateTime = 1 / 150 * 1000;
 
     private static void UpdateCheat()
     {
+        _saidWait = false;
         try
         {
                 
@@ -48,65 +52,94 @@ internal static class Program
             Console.WriteLine("Initializing mumble");
             init_mumble();
             Console.WriteLine("finished initializing mumble");
-            bool saidWait = false;
+            int dir = 0;
+            
+            ShipStatus status = Cheese.GetShipStatus();
+                        
+            if (status.OwnerId == 0 && !_saidWait)
+            {
+                foreach (var player in _playerDataList)
+                {
+                    player.StopObserveState();
+                }
+                Console.WriteLine("Not in game, waiting....");
+                _x = 0;
+                _y = 0;
+                _z = 0;
+                _localPlayer = null;
+                _saidWait = true;
+            }
+            else
+            {
+
+                _playerDataList = Cheese.GetAllPlayers();
+
+                foreach (var player in _playerDataList)
+                {
+                    if (player.IsLocalPlayer)
+                    {
+                        player.StartObserveState();
+                    }
+                }
+            }
+
             while (true)
             {
                 update_mumble(_x, _y, _z, _direction, _name, _context);
                 Thread.Sleep(UpdateTime);
-
-                var status = Cheese.GetShipStatus();
-
-                if (status.OwnerId == 0 && !saidWait)
-                {
-                    Console.WriteLine("Not in game, waiting....");
-                    _localPlayer = null;
-                    saidWait = true;
-                    continue;
-                }
-
-                if (status.OwnerId != 0 && saidWait) saidWait = false;
+                //Console.WriteLine("hey");
+                
+                _localPlayer = _playerDataList.Find(s => s.IsLocalPlayer);
 
                 if (_localPlayer == null)
                 {
-                    _localPlayer = _playerDataList.Find(s => s.IsLocalPlayer);
+                    _x = 0;
+                    _y = 0;
+                    _z = 0;
+                    Console.WriteLine("Not in game, waiting....");
+                    _localPlayer = null;
+                    _saidWait = true;
                     continue;
                 }
 
                 if (!_localPlayer.PlayerInfo.HasValue)
                 {
+                    _x = 0;
+                    _y = 0;
+                    _z = 0;
                     _localPlayer = null;
+                    Console.WriteLine("Not in game, waiting....");
+                    _x = 0;
+                    _y = 0;
+                    _z = 0;
+                    _localPlayer = null;
+                    _saidWait = true;
                     continue;
                 }
-                    
-                var playerName = Utils.ReadString(_localPlayer.PlayerInfo.Value.PlayerName);
-                    
-                int dir = _lastX > _localPlayer.Position.x ? 0 : 1;
+                
+                _name = Utils.ReadString(_localPlayer.PlayerInfo.Value.PlayerName);
 
-                if (_dead && _localPlayer.PlayerInfo.Value.IsDead == 0)
-                {
-                    _dead = false;
-                }
 
-                if (_localPlayer.PlayerInfo.Value.IsDead == 1)
+                if (_lastX > _localPlayer.Position.x)
+                    dir = 0;
+                else if (_lastX < _localPlayer.Position.x)
                 {
-                    Task.Delay(5000).ContinueWith(t => _dead = true);
-                    Console.WriteLine("Died, 5 sec until no more positional audio");
+                    dir = 1;
                 }
 
 
-                _x = _dead ? 0 : _localPlayer.Position.x;
+                _x = _localPlayer.Position.x;
                 _y = 0;
-                _z = _dead ? 0 : _localPlayer.Position.y;
+                _z = _localPlayer.Position.y;
 
-                _y = 0;
-                _name = playerName;
+                
                 _direction = dir;
                 _context = "main";
                 _lastX = _localPlayer.Position.x;
 
                 Console.WriteLine(
-                    $"Name : {playerName}, x : {_localPlayer.Position.x} , y: {_localPlayer.Position.y}, dead: {_dead}, direction: " +
-                    (dir == 0 ? "left" : "right"));
+                    $"Name : {_name}, x : {_localPlayer.Position.x} , y: {_localPlayer.Position.y},  direction: " +
+                    (dir == 0 ? "left" : "right") +$" , context: {_context}");
             }
         }
         catch (Exception e)
@@ -115,13 +148,13 @@ internal static class Program
         }
     }
 
-    private static bool _dead;
-
-
     private static void Main()
     {
         try
         {
+            AutoUpdater.HttpUserAgent = "AutoUpdater";
+            AutoUpdater.ParseUpdateInfoEvent += OnParseUpdateInfo;
+            AutoUpdater.Start("https://api.github.com/repos/LelouBil/AmongUsMumbleLink/releases/latest");
             Console.WriteLine("Starting");
             AppDomain.CurrentDomain.UnhandledException +=
                 CurrentDomain_UnhandledException;
@@ -134,22 +167,58 @@ internal static class Program
                 // Update Player Data When Every Game
                 Cheese.ObserveShipStatus((shipStat) =>
                 {
-                    foreach (var player in _playerDataList)
+                    
+                    try
                     {
-                        player.StopObserveState();
-                    }
-
-
-                    _playerDataList = Cheese.GetAllPlayers();
-
-
-                    foreach (var player in _playerDataList)
-                    {
-                        if (player.IsLocalPlayer)
+                        ShipStatus status = Cheese.GetShipStatus();
+                        
+                        if (status.OwnerId == 0 && !_saidWait)
                         {
-                            player.StartObserveState();
+                            foreach (var player in _playerDataList)
+                            {
+                                player.StopObserveState();
+                            }
+                            Console.WriteLine("Not in game, waiting....");
+                            _x = 0;
+                            _y = 0;
+                            _z = 0;
+                            _localPlayer = null;
+                            _playerDataList = new List<PlayerData>();
+                            _saidWait = true;
+                            return;
+                        }
+
+                        if (status.OwnerId != 0 && _saidWait) _saidWait = false;
+                        
+                        _playerDataList = Cheese.GetAllPlayers();
+
+                        foreach (var player in _playerDataList)
+                        {
+                            if (player.IsLocalPlayer)
+                            {
+                                player.StartObserveState();
+                            }
                         }
                     }
+                    catch (Exception e)
+                    {
+                        if (!_saidWait)
+                        {
+                            foreach (var player in _playerDataList)
+                            {
+                                player.StopObserveState();
+                            }
+                            Console.WriteLine("Not in game, waiting....");
+                            _localPlayer = null;
+                            _saidWait = true;
+                            _x = 0;
+                            _y = 0;
+                            _z = 0;
+                        }
+
+                        return;
+                    }
+                    
                 });
                 Console.WriteLine("Starting Thread");
                 CancellationTokenSource cts = new CancellationTokenSource();
@@ -169,5 +238,22 @@ internal static class Program
         }
         Console.WriteLine("Press any key to stop...");
         Console.ReadKey();
+    }
+
+    private static void OnParseUpdateInfo(ParseUpdateInfoEventArgs args)
+    {
+        dynamic json = JsonConvert.DeserializeObject(args.RemoteData);
+        if (json != null)
+            args.UpdateInfo = new UpdateInfoEventArgs
+            {
+                CurrentVersion = json.tag_name,
+                ChangelogURL = json.html_url,
+                DownloadURL = json.assets[0].browser_download_url,
+                Mandatory = new Mandatory
+                {
+                    Value = true,
+                    UpdateMode = Mode.Forced,
+                }
+            };
     }
 }
