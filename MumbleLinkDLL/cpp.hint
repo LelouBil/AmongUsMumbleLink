@@ -1,0 +1,2 @@
+#define MUMBLELINKDLL_API __declspec(dllexport)
+#define MUMBLELINKDLL_API __declspec(dllimport)
