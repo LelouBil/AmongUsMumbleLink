@@ -1,5 +1,9 @@
 # AmongUs Mumble Link
 
+CURRENTLY DOES NOT WORK WITH LATEST AMONG US
+
+I'm waiting for the release of MelonLoader v0.3 with 32 bit apps support and will rework this as a mod.
+
 Small program that gets the player's position and feeds it to Mumble for positional audio.
 
 ## How to use
