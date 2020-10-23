@@ -6,6 +6,8 @@ I'm waiting for the release of MelonLoader v0.3 with 32 bit apps support and wil
 
 Small program that gets the player's position and feeds it to Mumble for positional audio.
 
+Also check out Impostor, the dedicated among us server with plugin support
+
 ## How to use
 
  - download mumble
