@@ -1,5 +1,7 @@
 # AmongUs Mumble Link
 
+STOP LOOKING AT THIS 
+this is better => https://github.com/StarGate01/AmongUs-Mumble
 CURRENTLY DOES NOT WORK WITH LATEST AMONG US
 
 I'm waiting for the release of MelonLoader v0.3 with 32 bit apps support and will rework this as a mod.
